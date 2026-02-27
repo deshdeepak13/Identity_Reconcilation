@@ -2,11 +2,18 @@ import express from "express";
 import dotenv from "dotenv";
 import { sequelize } from "./models/index.js";
 import identifyRoute from "./routes/identify.js";
+import cors from "cors";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.use(cors({
+  origin: "*", // allow all origins (good for assignment/demo)
+  methods: ["GET", "POST"],
+  credentials: true
+}));
 
 
 app.use(express.json());

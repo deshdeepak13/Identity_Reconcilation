@@ -4,6 +4,10 @@ import { ShieldCheck } from "lucide-react";
 import ContactForm from "./components/ContactForm";
 import ContactResult from "./components/ContactResult";
 
+const API = axios.create({
+  baseURL: import.meta.env.VITE_BACKEND_URL,
+});
+
 function App() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -15,7 +19,7 @@ function App() {
     setResult(null);
 
     try {
-      const response = await axios.post("/identify", payload);
+      const response = await API.post("/identify", payload);
       setResult(response.data);
     } catch (err) {
       setApiError(
@@ -25,27 +29,24 @@ function App() {
       );
 
       //    MOCK DATA
-      console.warn(
-        "API request failed (expected if no backend). Falling back to mock data.",
-      );
+      console.warn("API request failed. Falling back to mock data.");
       setTimeout(() => {
         setResult({
           contact: {
             primaryContactId: 101,
             emails: payload.email
-              ? [payload.email, "alex@example.com"]
-              : ["alex@example.com"],
+              ? [payload.email, "alex@bitespeed.co"]
+              : ["alex@bitespeed.co"],
             phoneNumbers: payload.phoneNumber
               ? [payload.phoneNumber, "9876543210"]
               : ["9876543210"],
             secondaryContactIds: [23, 45, 67],
           },
         });
-        setApiError("API Failed - Displaying Mock Data for testing");
+        setApiError("API Failed - Mock Data for UI testing");
         setLoading(false);
       }, 800);
       return;
-
     }
 
     setLoading(false);
@@ -54,7 +55,6 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans text-gray-900 selection:bg-blue-100 selection:text-blue-900">
       <div className="w-full max-w-xl bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] sm:p-10 p-6 border border-gray-100 transition-all relative overflow-hidden">
-        
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
 
         <div className="text-center mb-10 mt-2">

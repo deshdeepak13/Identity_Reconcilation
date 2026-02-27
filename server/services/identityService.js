@@ -1,151 +1,177 @@
 import { Op } from "sequelize";
-import { Contact } from "../models/index.js";
+import { sequelize, Contact } from "../models/index.js";
 
 export const identifyContact = async (email, phoneNumber) => {
-  // Step 1: Find matching contacts
-  const matchedContacts = await Contact.findAll({
-    where: {
-      [Op.or]: [
-        email ? { email } : null,
-        phoneNumber ? { phoneNumber } : null
-      ].filter(Boolean)
-    }
-  }); 
+  const transaction = await sequelize.transaction();
 
-  // Step 2: If none found → create new primary
-  if (matchedContacts.length === 0) {
-    const newContact = await Contact.create({
-      email,
-      phoneNumber,
-      linkPrecedence: "primary"
+  try {
+    // Find matching contacts
+    const matches = await Contact.findAll({
+      where: {
+        [Op.or]: [
+          email ? { email } : null,
+          phoneNumber ? { phoneNumber } : null
+        ].filter(Boolean)
+      },
+      transaction,
+      lock: transaction.LOCK.UPDATE
     });
 
-    return buildResponse(newContact.id);
-  }
+    if (matches.length === 0) {
+      const newContact = await Contact.create(
+        {
+          email,
+          phoneNumber,
+          linkPrecedence: "primary",
+          linkedId: null
+        },
+        { transaction }
+      );
 
-  // Step 3: Collect all primary IDs
-  const primaryIds = new Set();
-
-  matchedContacts.forEach((c) => {
-    if (c.linkPrecedence === "primary") {
-      primaryIds.add(c.id);
-    } else {
-      primaryIds.add(c.linkedId);
+      await transaction.commit();
+      
+      return {
+        contact: {
+          primaryContatctId: newContact.id,
+          emails: newContact.email ? [newContact.email] : [],
+          phoneNumbers: newContact.phoneNumber ? [newContact.phoneNumber] : [],
+          secondaryContactIds: []
+        }
+      };
     }
-  });
 
-  // Step 4: Get full cluster
-  const allContacts = await Contact.findAll({
-    where: {
-      [Op.or]: [
-        { id: [...primaryIds] },
-        { linkedId: [...primaryIds] }
-      ]
+    // DSU FIND with full path compression
+    const findRoot = async (contact) => {
+      let current = contact;
+      const visited = [];
+
+      while (current.linkedId !== null) {
+        visited.push(current);
+        current = await Contact.findByPk(current.linkedId, {
+          transaction,
+          lock: transaction.LOCK.UPDATE
+        });
+      }
+
+      const root = current;
+
+      // Path compression
+      for (const node of visited) {
+        if (node.linkedId !== root.id) {
+          await node.update(
+            { linkedId: root.id },
+            { transaction }
+          );
+        }
+      }
+
+      return root;
+    };
+
+    // Resolve all ultimate roots
+    const rootMap = new Map();
+
+    for (const contact of matches) {
+      const root = await findRoot(contact);
+      rootMap.set(root.id, root);
     }
-  });
 
-  // Step 5: Find oldest primary
-  const primaries = allContacts.filter(
-    (c) => c.linkPrecedence === "primary"
-  );
+    const roots = [...rootMap.values()];
 
-  primaries.sort(
-    (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-  );
+    // Select oldest root (union by oldest)
+    let ultimateRoot = roots[0];
 
-  const oldestPrimary = primaries[0];
-
-  // Step 6: Convert other primaries to secondary
-  for (const primary of primaries) {
-    if (primary.id !== oldestPrimary.id) {
-      await primary.update({
-        linkPrecedence: "secondary",
-        linkedId: oldestPrimary.id
-      });
+    for (const root of roots) {
+      if (new Date(root.createdAt) < new Date(ultimateRoot.createdAt)) {
+        ultimateRoot = root;
+      }
     }
-  }
 
-  // Step 7: Refresh cluster
-  const finalCluster = await Contact.findAll({
-    where: {
-      [Op.or]: [
-        { id: oldestPrimary.id },
-        { linkedId: oldestPrimary.id }
-      ]
+    // Union other roots into ultimate root
+    for (const root of roots) {
+      if (root.id !== ultimateRoot.id) {
+        await Contact.update(
+          {
+            linkedId: ultimateRoot.id,
+            linkPrecedence: "secondary"
+          },
+          {
+            where: {
+              [Op.or]: [
+                { id: root.id },
+                { linkedId: root.id }
+              ]
+            },
+            transaction
+          }
+        );
+      }
     }
-  });
 
-  const emails = new Set();
-  const phoneNumbers = new Set();
-  const secondaryContactIds = [];
-
-  finalCluster.forEach((c) => {
-    if (c.email) emails.add(c.email);
-    if (c.phoneNumber) phoneNumbers.add(c.phoneNumber);
-    if (c.linkPrecedence === "secondary") {
-      secondaryContactIds.push(c.id);
-    }
-  });
-
-  // Step 8: Create secondary if new info
-  const emailExists = email && emails.has(email);
-  const phoneExists = phoneNumber && phoneNumbers.has(phoneNumber);
-
-  if ((email && !emailExists) || (phoneNumber && !phoneExists)) {
-    const newSecondary = await Contact.create({
-      email,
-      phoneNumber,
-      linkedId: oldestPrimary.id,
-      linkPrecedence: "secondary"
+    // Fetch entire flattened cluster
+    const cluster = await Contact.findAll({
+      where: {
+        [Op.or]: [
+          { id: ultimateRoot.id },
+          { linkedId: ultimateRoot.id }
+        ]
+      },
+      transaction
     });
 
-    if (email) emails.add(email);
-    if (phoneNumber) phoneNumbers.add(phoneNumber);
-    secondaryContactIds.push(newSecondary.id);
+    const emails = new Set();
+    const phoneNumbers = new Set();
+    const secondaryContactIds = [];
+
+    cluster.forEach((c) => {
+      if (c.email) emails.add(c.email);
+      if (c.phoneNumber) phoneNumbers.add(c.phoneNumber);
+      if (c.linkPrecedence === "secondary") {
+        secondaryContactIds.push(c.id);
+      }
+    });
+
+    // Create secondary if new info present
+    const emailExists = email && emails.has(email);
+    const phoneExists = phoneNumber && phoneNumbers.has(phoneNumber);
+
+    if ((email && !emailExists) || (phoneNumber && !phoneExists)) {
+      const newSecondary = await Contact.create(
+        {
+          email,
+          phoneNumber,
+          linkedId: ultimateRoot.id,
+          linkPrecedence: "secondary"
+        },
+        { transaction }
+      );
+
+      if (email) emails.add(email);
+      if (phoneNumber) phoneNumbers.add(phoneNumber);
+      secondaryContactIds.push(newSecondary.id);
+    }
+
+    await transaction.commit();
+
+    return {
+      contact: {
+        primaryContatctId: ultimateRoot.id,
+        emails: [
+          ultimateRoot.email,
+          ...[...emails].filter((e) => e !== ultimateRoot.email)
+        ].filter(Boolean),
+        phoneNumbers: [
+          ultimateRoot.phoneNumber,
+          ...[...phoneNumbers].filter(
+            (p) => p !== ultimateRoot.phoneNumber
+          )
+        ].filter(Boolean),
+        secondaryContactIds
+      }
+    };
+
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
   }
-
-  return {
-    contact: {
-      primaryContatctId: oldestPrimary.id,
-      emails: [
-        oldestPrimary.email,
-        ...[...emails].filter((e) => e !== oldestPrimary.email)
-      ].filter(Boolean),
-      phoneNumbers: [
-        oldestPrimary.phoneNumber,
-        ...[...phoneNumbers].filter(
-          (p) => p !== oldestPrimary.phoneNumber
-        )
-      ].filter(Boolean),
-      secondaryContactIds
-    }
-  };
-};
-
-const buildResponse = async (primaryId) => {
-  const cluster = await Contact.findAll({
-    where: {
-      [Op.or]: [
-        { id: primaryId },
-        { linkedId: primaryId }
-      ]
-    }
-  });
-
-  const primary = cluster.find(
-    (c) => c.linkPrecedence === "primary"
-  );
-
-  return {
-    contact: {
-      primaryContatctId: primary.id,
-      emails: cluster.map((c) => c.email).filter(Boolean),
-      phoneNumbers: cluster
-        .map((c) => c.phoneNumber)
-        .filter(Boolean),
-      secondaryContactIds: cluster
-        .filter((c) => c.linkPrecedence === "secondary")
-        .map((c) => c.id)
-    }
-  };
 };

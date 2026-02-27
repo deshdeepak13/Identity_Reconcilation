@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
     const { count, rows: contacts } = await Contact.findAndCountAll({
       limit,
       offset,
-      order: [['id', 'DESC']]
+      order: [['id']]
     });
 
     res.status(200).json({

@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import { sequelize } from "./models/index.js";
-// import identifyRoute from "./routes/identify.js";
+import identifyRoute from "./routes/identify.js";
 
 dotenv.config();
 
@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 
-// app.use("/identify", identifyRoute);
+app.use("/identify", identifyRoute);
 
 
 app.get("/", (req, res) => {

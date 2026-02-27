@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   Database,
@@ -15,12 +15,14 @@ const API = axios.create({
 });
 
 export default function DatabasePage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 10;
+
+  const currentPage = parseInt(searchParams.get("page")) || 1;
 
   useEffect(() => {
     fetchContacts(currentPage);
@@ -94,49 +96,41 @@ export default function DatabasePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center p-4 sm:p-8 lg:p-12 font-sans text-gray-900 selection:bg-blue-100">
+    <div className="min-h-screen bg-black flex flex-col items-center p-4 sm:p-8 lg:p-12 font-sans text-white selection:bg-orange-500/30">
       <div className="w-full max-w-5xl">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
-              <Database className="w-6 h-6 text-indigo-500" />
+            <div className="bg-zinc-900 p-2 rounded-xl shadow-sm border border-zinc-800 flex items-center justify-center">
+              <Database className="w-6 h-6 text-orange-500" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+              <h1 className="text-2xl font-bold tracking-tight text-white">
                 Contact Database
               </h1>
-              <p className="text-sm text-gray-500 font-medium">
+              <p className="text-sm text-zinc-400 font-medium">
                 Viewing all records in the Contact table
               </p>
             </div>
           </div>
-
-          <Link
-            to="/"
-            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 shadow-sm transition-all hover:shadow"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </Link>
         </div>
 
         {error && (
-          <div className="mb-6 bg-amber-50 text-amber-700 px-4 py-3 rounded-xl text-sm font-medium border border-amber-200">
+          <div className="mb-6 bg-orange-500/10 text-orange-400 px-4 py-3 rounded-xl text-sm font-medium border border-orange-500/20">
             {error}
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-zinc-900 rounded-2xl shadow-sm border border-zinc-800 overflow-hidden">
           {loading ? (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-              <Loader2 className="w-8 h-8 animate-spin mb-4 text-blue-500" />
+            <div className="flex flex-col items-center justify-center h-64 text-zinc-400">
+              <Loader2 className="w-8 h-8 animate-spin mb-4 text-orange-500" />
               <p className="font-medium text-sm">Loading Database Records...</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500 font-semibold">
+                  <tr className="bg-zinc-950 border-b border-zinc-800 text-xs uppercase tracking-wider text-zinc-500 font-semibold">
                     <th className="px-6 py-4">ID</th>
                     <th className="px-6 py-4">Email</th>
                     <th className="px-6 py-4">Phone Number</th>
@@ -148,12 +142,12 @@ export default function DatabasePage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-zinc-800">
                   {contacts.length === 0 ? (
                     <tr>
                       <td
                         colSpan="7"
-                        className="px-6 py-12 text-center text-gray-500 font-medium"
+                        className="px-6 py-12 text-center text-zinc-500 font-medium"
                       >
                         No contacts found in the database.
                       </td>
@@ -162,46 +156,46 @@ export default function DatabasePage() {
                     contacts.map((contact) => (
                       <tr
                         key={contact.id}
-                        className="hover:bg-gray-50 transition-colors"
+                        className="hover:bg-zinc-800/50 transition-colors"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-white">
                           #{contact.id}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">
                           {contact.email || (
-                            <span className="text-gray-400 italic">null</span>
+                            <span className="text-zinc-600 italic">null</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">
                           {contact.phoneNumber || (
-                            <span className="text-gray-400 italic">null</span>
+                            <span className="text-zinc-600 italic">null</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                               contact.linkPrecedence === "primary"
-                                ? "bg-blue-100 text-blue-800 border border-blue-200"
-                                : "bg-gray-100 text-gray-800 border border-gray-200"
+                                ? "bg-orange-500/10 text-orange-400 border border-orange-500/30"
+                                : "bg-zinc-800 text-zinc-400 border border-zinc-700"
                             }`}
                           >
                             {contact.linkPrecedence}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400 font-mono">
                           {contact.linkedId ? (
                             `#${contact.linkedId}`
                           ) : (
-                            <span className="text-gray-400 italic">null</span>
+                            <span className="text-zinc-600 italic">null</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-500">
                           {new Date(contact.createdAt).toLocaleString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
                             onClick={() => handleDelete(contact.id)}
-                            className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                            className="text-zinc-500 hover:text-red-500 hover:bg-red-500/10 p-2 rounded-lg transition-colors"
                             title="Delete Contact"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -218,23 +212,26 @@ export default function DatabasePage() {
 
         {/* Pagination Controls */}
         {!loading && totalPages > 1 && (
-          <div className="flex items-center justify-between mt-6 bg-white px-6 py-4 border border-gray-200 rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between mt-6 bg-zinc-900 px-6 py-4 border border-zinc-800 rounded-2xl shadow-sm">
             <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              onClick={() =>
+                setSearchParams({ page: Math.max(1, currentPage - 1) })
+              }
               disabled={currentPage === 1}
-              className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-zinc-300 bg-zinc-800 border border-zinc-700 rounded-lg hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               <ChevronLeft className="w-4 h-4" /> Previous
             </button>
-            <span className="text-sm text-gray-600 font-medium">
-              Page{" "}
-              <span className="font-bold text-gray-900">{currentPage}</span> of{" "}
-              <span className="font-bold text-gray-900">{totalPages}</span>
+            <span className="text-sm text-zinc-400 font-medium">
+              Page <span className="font-bold text-white">{currentPage}</span>{" "}
+              of <span className="font-bold text-white">{totalPages}</span>
             </span>
             <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() =>
+                setSearchParams({ page: Math.min(totalPages, currentPage + 1) })
+              }
               disabled={currentPage === totalPages}
-              className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-zinc-300 bg-zinc-800 border border-zinc-700 rounded-lg hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               Next <ChevronRight className="w-4 h-4" />
             </button>

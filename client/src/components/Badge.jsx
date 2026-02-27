@@ -5,10 +5,10 @@ export default function Badge({ children, variant = "default" }) {
     "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm border";
 
   const variants = {
-    default: "bg-gray-50 text-gray-700 border-gray-200",
-    primary: "bg-blue-50 text-blue-700 border-blue-200",
-    success: "bg-green-50 text-green-700 border-green-200",
-    secondary: "bg-purple-50 text-purple-700 border-purple-200",
+    default: "bg-zinc-800 text-zinc-300 border-zinc-700",
+    primary: "bg-orange-500/10 text-orange-500 border-orange-500/30",
+    success: "bg-orange-600/20 text-orange-400 border-orange-600/40",
+    secondary: "bg-zinc-800 text-zinc-400 border-zinc-700",
   };
 
   return (

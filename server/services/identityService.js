@@ -10,7 +10,7 @@ export const identifyContact = async (email, phoneNumber) => {
         phoneNumber ? { phoneNumber } : null
       ].filter(Boolean)
     }
-  });
+  }); 
 
   // Step 2: If none found → create new primary
   if (matchedContacts.length === 0) {

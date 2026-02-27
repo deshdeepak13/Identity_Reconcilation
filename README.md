@@ -99,3 +99,21 @@ We no longer need BFS recursive queries. The DB traversal happens simultaneously
 - **Handling Race Conditions:** In a highly concurrent system, two identical requests firing simultaneously could duplicate a Primary contact. I mitigated this by wrapping the entire resolution flow inside a **Database Transaction** combined with row-level locking (`transaction.LOCK.UPDATE`).
 - **Eliminated Sorting Overhead:** Rather than fetching all nodes, sorting them in memory by date, and picking the oldest, the DSU strictly executes "Union by Oldest" at merge time. The ultimate root is inherently guaranteed to be the oldest, bypassing heavy array sorting operations!
 - **Future Scaling:** The architecture is perfectly suited for B-Tree indexing on `email`, `phoneNumber`, and `linkedId`, converting global table scans to lighting fast **O(log N)** lookups.
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend (Client)
+
+- **Framework:** React 19 (via Vite)
+- **Styling:** Tailwind CSS 4
+- **Animations:** Framer Motion
+- **Icons:** Lucide React
+
+### Backend (Server)
+
+- **Runtime:** Node.js
+- **Framework:** Express.js
+- **ORM:** Sequelize
+- **Database:** PostgreSQL

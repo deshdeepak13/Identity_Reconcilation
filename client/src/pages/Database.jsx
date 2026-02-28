@@ -39,7 +39,7 @@ export default function DatabasePage() {
       setError(null);
     } catch (err) {
       console.error("Failed to fetch database:", err);
-      // Mock data for UI presentation if backend isn't linked
+      // Mock data if backend fails.
       setContacts([
         {
           id: 1,
@@ -82,7 +82,7 @@ export default function DatabasePage() {
       if (!window.confirm(`Are you sure you want to delete contact #${id}?`)) {
         return;
       }
-      // Optimistically remove from UI, or just set loading
+      
       setContacts((prev) => prev.filter((c) => c.id !== id));
       await API.delete(`/contacts/${id}`);
     } catch (err) {
@@ -90,7 +90,7 @@ export default function DatabasePage() {
       setError(
         "Failed to delete contact. It might already be removed, or backend connection failed.",
       );
-      // Fetch again to revert pessimistic update failure or grab next page items
+      
       fetchContacts(currentPage);
     }
   };
@@ -210,7 +210,7 @@ export default function DatabasePage() {
           )}
         </div>
 
-        {/* Pagination Controls */}
+        {/* Pagination*/}
         {!loading && totalPages > 1 && (
           <div className="flex items-center justify-between mt-6 bg-zinc-900 px-6 py-4 border border-zinc-800 rounded-2xl shadow-sm">
             <button

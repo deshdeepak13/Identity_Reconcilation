@@ -54,37 +54,17 @@ function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans text-white selection:bg-orange-500/30 selection:text-white relative">
-      {/* Approach Dashboard Callout (Desktop Only) */}
-      <div className="hidden xl:flex absolute left-8 top-1/3 -translate-y-12 flex-col items-end w-72 animate-in fade-in slide-in-from-left-8 duration-700 delay-500 fill-mode-both z-10">
-        {/* Playful Curving Arrow pointing towards the Top Right (Navbar) */}
-        <div className="relative w-full flex justify-end mb-2 pr-8">
-          <svg
-            className="w-32 h-24 text-orange-500/60 drop-shadow-lg"
-            viewBox="0 0 100 100"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path
-              d="M10,90 Q40,20 100,5"
-              strokeDasharray="6 6"
-              className="animate-[dash_3s_linear_infinite]"
-            />
-            <polyline points="85,-5 102,4 85,15" />
-          </svg>
-        </div>
-
-        <div className="bg-zinc-900/90 backdrop-blur-md border border-zinc-800 p-5 rounded-2xl shadow-2xl relative w-full">
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 font-sans text-white selection:bg-orange-500/30 selection:text-white relative">
+      {/* Approach Dashboard Callout */}
+      <div className="flex xl:absolute xl:left-8 xl:top-1/3 xl:-translate-y-12 flex-col items-center xl:items-start w-full max-w-sm xl:w-72 order-2 xl:order-0 mt-8 xl:mt-0 animate-in fade-in duration-700 delay-500 fill-mode-both z-10">
+        <div className="bg-zinc-900/90 backdrop-blur-md border border-zinc-800 p-5 rounded-2xl shadow-2xl relative w-full text-center xl:text-left">
           <div className="absolute -inset-0.5 bg-linear-to-r from-orange-500/20 to-orange-600/20 rounded-2xl blur-sm -z-10"></div>
           <p className="text-zinc-300 text-sm leading-relaxed mb-4">
             Please check out the thought process behind the solution
           </p>
           <Link
             to="/explanation"
-            className="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold py-2.5 px-4 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(234,88,12,0.4)]"
+            className="inline-flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold py-2.5 px-4 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(234,88,12,0.4)]"
           >
             <Lightbulb className="w-4 h-4" />
             My Approach
@@ -92,7 +72,7 @@ function Home() {
         </div>
       </div>
 
-      <div className="w-full max-w-xl bg-zinc-900 rounded-3xl shadow-2xl sm:p-10 p-6 border border-zinc-800 transition-all relative overflow-hidden z-20">
+      <div className="w-full max-w-xl bg-zinc-900 rounded-3xl shadow-2xl sm:p-10 p-6 border border-zinc-800 transition-all relative overflow-hidden z-20 order-1 xl:order-0">
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-orange-400 to-orange-600"></div>
 
         <div className="text-center mb-10 mt-2">

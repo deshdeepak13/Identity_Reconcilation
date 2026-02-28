@@ -11,7 +11,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors({
-  origin: "*", // allow all origins (good for assignment/demo)
+  origin: "*",
   methods: ["GET", "POST","DELETE"],
   credentials: true
 }));
